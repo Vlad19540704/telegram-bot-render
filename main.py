@@ -1,14 +1,13 @@
 from flask import Flask, request
 import requests
 import os
-from openai import OpenAI
+import openai
 
 app = Flask(__name__)
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-
-client = OpenAI(api_key=OPENAI_API_KEY)
+openai.api_key = OPENAI_API_KEY  # 🔧 старый способ
 
 @app.route('/')
 def index():
@@ -23,7 +22,7 @@ def webhook():
         user_message = data["message"]["text"]
 
         try:
-            response = client.chat.completions.create(
+            response = openai.ChatCompletion.create(
                 model="gpt-4",
                 messages=[{"role": "user", "content": user_message}]
             )
@@ -40,5 +39,6 @@ def webhook():
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+
 
 
