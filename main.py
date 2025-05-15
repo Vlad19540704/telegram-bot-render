@@ -47,6 +47,17 @@ def webhook():
                 )
                 reply = response.choices[0].message.content
             except Exception as e:
+                reply = f"Ошибка при обращении к OpenAI: {str(e)}"
+
+        requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage", json={
+            "chat_id": chat_id,
+            "text": reply
+        })
+
+    return '', 200
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
 
                           
 
