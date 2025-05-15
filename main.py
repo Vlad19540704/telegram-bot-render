@@ -1,13 +1,15 @@
-from flask import Flask, request
+
+ from flask import Flask, request
 import requests
 import os
-import openai
+from openai import OpenAI
 
 app = Flask(__name__)
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-openai.api_key = OPENAI_API_KEY
+
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 @app.route('/')
 def index():
@@ -21,12 +23,14 @@ def webhook():
         chat_id = data["message"]["chat"]["id"]
         user_message = data["message"]["text"]
 
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[{"role": "user", "content": user_message}]
-        )
-
-        reply = response.choices[0].message.content
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": user_message}]
+            )
+            reply = response.choices[0].message.content
+        except Exception as e:
+            reply = f"Ошибка при обращении к OpenAI: {str(e)}"
 
         requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage", json={
             "chat_id": chat_id,
@@ -35,8 +39,6 @@ def webhook():
 
     return '', 200
 
-# 🟢 ВАЖНО: ЭТО ДОЛЖНО БЫТЬ В КОНЦЕ
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
 
-       
